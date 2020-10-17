@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="/css/simplecss.css">
+    <link rel="stylesheet" href="/css/admin.css">
+    <script src="/js/ajax.js"></script>
+</head>
+<body>
+<div class="nav">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-10">
+                <a href="/admin">全球富豪后台管理系统</a>
+                <a href="" class="btn btn-success" id="add-btn">添加富豪</a>
+            </div>
+            <div class="col-md-2"><a href="/logout">退出系统</a></div>
+        </div>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <table class="table table-bordered" id="table">
+                <tr>
+                    <th>富豪编号</th>
+                    <th>姓名</th>
+                    <th>总资产</th>
+                    <th>固定资产</th>
+                    <th>流动资产</th>
+                    <th>操作</th>
+                </tr>
+                <!--<tr>-->
+                    <!--<td>1</td>-->
+                    <!--<td>张三</td>-->
+                    <!--<td>1@qq.com</td>-->
+                    <!--<td>135999888899</td>-->
+                    <!--<td>2014868983</td>-->
+                    <!--<td>-->
+<!--                        <a href="" class="btn btn-primary">修改</a>-->
+<!--                        <a href="" class="btn btn-danger">删除</a>-->
+                    <!--</td>-->
+                <!--</tr>-->
+            </table>
+        </div>
+    </div>
+</div>
+<!--添加用户panel-->
+<div class="panel panel-default" id="adduser">
+    <div class="panel-heading">
+        <div class="panel-title">添加富豪</div>
+    </div>
+    <div class="panel-body">
+        <div class="row">
+            <div class="col-md-4">姓名</div>
+            <div class="col-md-8"><input type="text" id="username"></div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">总资产</div>
+            <div class="col-md-8"><input type="text" id="total"></div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">固定资产</div>
+            <div class="col-md-8"><input type="text" id="fixed"></div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">流动资产</div>
+            <div class="col-md-8"><input type="text" id="current"></div>
+        </div>
+    </div>
+    <div class="panel-footer">
+        <button class="btn btn-primary" id="save-btn">保存</button>
+        <button class="btn btn-primary" id="cancel-btn">取消</button>
+    </div>
+</div>
+
+<!--编辑用户 panel-->
+<div class="panel panel-default" id="editUser">
+    <div class="panel-heading">
+        <div class="panel-title">编辑富豪信息</div>
+    </div>
+    <div class="panel-body">
+        <div class="row">
+            <div class="col-md-4">姓名</div>
+            <div class="col-md-8"><input type="text" id="edit-username"></div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">总资产</div>
+            <div class="col-md-8"><input type="text" id="edit-total"></div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">固定资产</div>
+            <div class="col-md-8"><input type="text" id="edit-fixed"></div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">流动资产</div>
+            <div class="col-md-8">
+                <input type="text" id="edit-current">
+                <input type="hidden" id="edit-id">
+            </div>
+        </div>
+    </div>
+    <div class="panel-footer">
+        <button class="btn btn-primary" id="edit-save-btn">保存</button>
+        <button class="btn btn-primary" id="edit-cancel-btn">取消</button>
+    </div>
+</div>
+
+<script>
+
+//数据库表格呈现
+    var oTable = document.getElementById("table");
+    ajax({
+        method: 'GET',
+        url:'/list',
+        success: function (result) {
+            // console.log(result);   //测试
+            if(result.status === 0){
+            //    result.date是一个数组，每个元素为一个对象
+                for(var i=0; i<result.data.length; i++){
+                    // console.log(result.date[i]);  测试
+                    var oTr = document.createElement("tr");
+                    var obj = result.data[i];
+                    for(item in obj){
+                        // console.log(obj[item])  //拿到属性值
+                        var oTd = document.createElement("td");
+                        oTd.innerHTML = obj[item];
+                        oTr.appendChild(oTd);
+                    }
+                    oTable.appendChild(oTr);
+                //    手动添加修改操作td
+                    var op = document.createElement("td");
+                    op.innerHTML = ' <button class="btn btn-primary">修改</button>'+
+                                   '<button class="btn btn-danger">删除</button>';
+                    oTr.appendChild(op);
+                }
+            }
+        }
+    });
+
+//点击添加弹窗业务内容
+    //点击取消
+    var cancelBtn = document.getElementById("cancel-btn");
+    cancelBtn.onclick = function () {
+        addUser.style.display = "none";
+    }
+    //点击保存
+    var saveBtn = document.getElementById("save-btn");
+    saveBtn.onclick = function () {
+        var oUser = document.getElementById("username");
+        var oTotal = document.getElementById("total");
+        var oFixed = document.getElementById("fixed");
+        var oCurrent = document.getElementById("current");
+        ajax({
+            method: "POST",
+            url: "/adduser",
+            data: "username="+oUser.value+"&total="+oTotal.value+"&fixed="+oFixed.value+"&current="+oCurrent.value,
+            success:function (result) {
+                if(result.status === 0){
+                    addUser.style.display = "none";
+                    alert(result.message);
+                    window.location.reload();  //刷新当前页面
+                }else {
+                    alert(result.message);
+                }
+            }
+        })
+    }
+
+//点击添加弹窗业务显示
+    var addBtn =document.getElementById("add-btn");
+    var addUser = document.getElementById("adduser");
+    addBtn.onclick = function () {
+        addUser.style.display = "block";
+        var left = document.documentElement.clientWidth/2 - addUser.offsetWidth/2;
+        var top = document.documentElement.clientHeight/2 - addUser.offsetHeight/2;
+        addUser.style.left = left + "px";
+        addUser.style.top = top + "px";
+        return false;
+    }
+
+
+// 修改按钮的业务逻辑
+//  点击修改弹窗业务
+    var editUser = document.getElementById("editUser");
+    var editUsername = document.getElementById("edit-username");
+    var editTotal = document.getElementById("edit-total");
+    var editFixed = document.getElementById("edit-fixed");
+    var editCurrent = document.getElementById("edit-current");
+    var editId = document.getElementById("edit-id");
+    oTable.onclick = function (ev) {
+        var ev = ev || event;
+        var aTd = ev.target.parentNode.parentNode.children;  //获取点击修改的当前行所有的td
+        if(ev.target.innerHTML === "修改"){
+            // alert("修改按钮连接成功");
+            editUser.style.display = "block";
+            var left = document.documentElement.clientWidth/2 - editUser.offsetWidth/2;
+            var top = document.documentElement.clientHeight/2 - editUser.offsetHeight/2;
+            editUser.style.left = left + "px";
+            editUser.style.top = top + "px";
+        //  修改弹窗后显示当前行的信息
+            editUsername.value= aTd[1].innerHTML;
+            editTotal.value = aTd[2].innerHTML;
+            editFixed.value = aTd[3].innerHTML;
+            editCurrent.value = aTd[4].innerHTML;
+            editId.value = aTd[0].innerHTML;  //编辑里的id被隐藏
+        }
+        if (ev.target.innerHTML === "删除"){
+            // alert("删除按钮连接成功");
+            ajax({
+                method: "POST",
+                url: "/delete",
+                data: "id="+aTd[0].innerHTML,
+                success: function (result) {
+                    if(result.status === 0){
+                        window.location.reload();
+                        alert(result.message);
+                    }else{
+                        alert(result.message);
+                    }
+            }
+            })
+        }
+    }
+//  点击取消
+    var editCancelbtn = document.getElementById("edit-cancel-btn");
+    editCancelbtn.onclick = function () {
+        editUser.style.display = "none";
+}
+//  点击保存
+    var editSaveBtn = document.getElementById("edit-save-btn");
+    editSaveBtn.onclick = function () {
+        ajax({
+            method: "POST",
+            url: "/update",
+            data: "username="+editUsername.value+"&total="+editTotal.value+"&fixed="+editFixed.value+"&current="+editCurrent.value+"&id="+editId.value,
+            success: function (result) {
+                // console.log(result);
+                if(result.status === 0){
+                    editUser.style.display = "none";
+                    alert(result.message);
+                    window.location.reload();
+                }else{
+                    alert(result.message);
+                }
+            }
+        })
+    }
+</script>
+</body>
+</html>
